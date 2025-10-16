@@ -8,7 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
+
+// 👉 IMPORTS de tus pantallas existentes
 import com.decoraia.app.ui.screens.*
+
+// 👉 IMPORTS para la pantalla de AR
+import com.decoraia.app.ar.ArPermissionGate
+import com.decoraia.app.ar.ArScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -26,8 +32,8 @@ fun AppNavGraph(navController: NavHostController) {
         composable("chatia") { PantallaChatIA(navController) }
         composable("configuracion") { PantallaConfiguracion(navController) }
         composable("descripcion") { PantallaDescripcion(navController) }
-        composable("editarperfil") { PantallaEditarPerfil(navController) } // ✅ deja solo una
-        composable("favoritos") { PantallaFavoritos(navController) }       // ✅ existe esta ruta
+        composable("editarperfil") { PantallaEditarPerfil(navController) }
+        composable("favoritos") { PantallaFavoritos(navController) }
         composable("inicio") { PantallaInicio(navController) }
         composable("login") { PantallaLogin(navController) }
         composable("mensajesalida") { PantallaMensajeSalida(navController) }
@@ -38,6 +44,10 @@ fun AppNavGraph(navController: NavHostController) {
         composable("salidaperfil") { PantallaSalidaPerfil(navController) }
         composable("soporte") { PantallaSoporte(navController) }
         composable("visualizacion") { PantallaVisualizacion(navController) }
+
+        // ---------------------------
+        // RUTAS PARA FLUJO DE RA
+        // ---------------------------
 
         // RA Estilos (sin args)
         composable("raestilos") { PantallaRAEstilos(navController) }
@@ -64,7 +74,7 @@ fun AppNavGraph(navController: NavHostController) {
             PantallaRAModelos(navController, style = style, categoryId = categoryId)
         }
 
-        // Visor AR opcional
+        // Visor AR “simple” que ya tenías apuntando a PantallaVisualizacion
         composable(
             route = "arviewer?modelUrl={modelUrl}",
             arguments = listOf(
@@ -76,6 +86,25 @@ fun AppNavGraph(navController: NavHostController) {
             )
         ) {
             PantallaVisualizacion(navController)
+        }
+
+        // ✅ NUEVA RUTA: AR nativa con SceneView
+        // Si no pasas assetPath, usa "models/sillon.glb" por defecto.
+        composable(
+            route = "ar?assetPath={assetPath}",
+            arguments = listOf(
+                navArgument("assetPath") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val asset = backStackEntry.arguments?.getString("assetPath")?.let(Uri::decode)
+                ?: "models/sillon.glb"
+            ArPermissionGate {
+                ArScreen(modelAssetPath = asset)
+            }
         }
     }
 }
